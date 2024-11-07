@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "description": "",
   "main": "teste.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "desafio1.2": "file:",
+    "luxon": "^3.5.0",
+    "prompt-sync": "^4.2.0"
+  }
 }
