@@ -7,9 +7,34 @@ class Paciente {
   }
 
 
-  validarCPF() {
-    const regex = /^\d{3}\.\d{3}\.\d{3}\-\d{2}$/; 
-    return regex.test(this.cpf);
+  validarCpf() {
+    const cpf = this.cpf.replace(/[^\d]/g, ''); 
+
+    if (!cpf || cpf.length !== 11 || /^(.)\1{10}$/.test(cpf)) {
+      return false;
+    }
+
+    let soma = 0;
+    let peso = 10; 
+    for (let i = 0; i < 9; i++) {
+      soma += parseInt(cpf.charAt(i)) * peso--; 
+    }
+
+    let resto = soma % 11;
+    let primeiroDigitoVerificador = resto < 2 ? 0 : 11 - resto;
+
+
+    soma = 0;
+    peso = 11; 
+    for (let i = 0; i < 10; i++) {
+      soma += parseInt(cpf.charAt(i)) * peso--; 
+    }
+
+    resto = soma % 11;
+    let segundoDigitoVerificador = resto < 2 ? 0 : 11 - resto;
+
+
+    return cpf.charAt(9) == primeiroDigitoVerificador && cpf.charAt(10) == segundoDigitoVerificador;
   }
 
 
