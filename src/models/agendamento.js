@@ -37,7 +37,6 @@ class Agendamento {
     const horaInicioValida = regexHora.test(this.horaInicio);
     const horaFimValida = regexHora.test(this.horaFim);
 
-    // Verificar se os horários estão dentro do intervalo de 8h às 19h
     const horaInicioValidaIntervalo = DateTime.fromFormat(this.horaInicio, 'HHmm').hour >= 8 && DateTime.fromFormat(this.horaInicio, 'HHmm').hour < 19;
     const horaFimValidaIntervalo = DateTime.fromFormat(this.horaFim, 'HHmm').hour >= 8 && DateTime.fromFormat(this.horaFim, 'HHmm').hour < 19;
 
