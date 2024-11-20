@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'; 
+import { DateTime } from 'luxon';
 
 class Agendamento {
   constructor(cpfPaciente, dataConsulta, horaInicio, horaFim, pacientes, agendamentos) {
@@ -10,7 +10,6 @@ class Agendamento {
     this.agendamentos = agendamentos;
   }
 
-
   validarAgendamento() {
     return (
       this.validarCpf() &&
@@ -18,31 +17,32 @@ class Agendamento {
       this.validarHoras() &&
       this.validarUnicoAgendamento() &&
       this.validarAgendamentoFuturo() &&
-      this.validarHorariosValidos() &&
+      this.validarHoraFinalMaiorQueHoraInicio() &&
       this.validarConsultorioAberto() &&
       this.validarSobreposicao()
     );
   }
 
-
   validarCpf() {
     return this.pacientes.some(paciente => paciente.cpf === this.cpfPaciente);
   }
-
 
   validarDataConsulta() {
     const dataValida = DateTime.fromFormat(this.dataConsulta, 'dd/MM/yyyy').isValid;
     return dataValida;
   }
 
-
   validarHoras() {
     const regexHora = /^(0[8-9]|1[0-9]):(00|15|30|45)$/;
     const horaInicioValida = regexHora.test(this.horaInicio);
     const horaFimValida = regexHora.test(this.horaFim);
-    return horaInicioValida && horaFimValida;
-  }
 
+    // Verificar se os horários estão dentro do intervalo de 8h às 19h
+    const horaInicioValidaIntervalo = DateTime.fromFormat(this.horaInicio, 'HHmm').hour >= 8 && DateTime.fromFormat(this.horaInicio, 'HHmm').hour < 19;
+    const horaFimValidaIntervalo = DateTime.fromFormat(this.horaFim, 'HHmm').hour >= 8 && DateTime.fromFormat(this.horaFim, 'HHmm').hour < 19;
+
+    return horaInicioValida && horaFimValida && horaInicioValidaIntervalo && horaFimValidaIntervalo;
+  }
 
   validarAgendamentoFuturo() {
     const dataAtual = DateTime.now();
@@ -58,13 +58,11 @@ class Agendamento {
     return false;
   }
 
-
   validarHoraFinalMaiorQueHoraInicio() {
     const horaInicioMoment = DateTime.fromFormat(this.horaInicio, 'HHmm');
     const horaFimMoment = DateTime.fromFormat(this.horaFim, 'HHmm');
     return horaFimMoment > horaInicioMoment;
   }
-
 
   validarUnicoAgendamento() {
     return !this.agendamentos.some(agendamento => {
@@ -74,7 +72,6 @@ class Agendamento {
       );
     });
   }
-
 
   validarSobreposicao() {
     return !this.agendamentos.some(agendamento => {
@@ -91,7 +88,6 @@ class Agendamento {
       );
     });
   }
-
 
   validarConsultorioAberto() {
     const horarioInicio = DateTime.fromFormat('0800', 'HHmm');
