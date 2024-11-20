@@ -1,63 +1,67 @@
 class Paciente {
   constructor(cpf, nome, dataNascimento) {
+    if (!this.validarCPF(cpf)) {
+      throw new Error('CPF inválido.');
+    }
+    if (!this.validarNome(nome)) {
+      throw new Error('Nome deve ter pelo menos 5 caracteres.');
+    }
+    if (!this.validarDataNascimento(dataNascimento)) {
+      throw new Error('Paciente deve ter pelo menos 13 anos e a data de nascimento deve ser válida.');
+    }
+
     this.cpf = cpf;
     this.nome = nome;
     this.dataNascimento = dataNascimento;
     this.consultas = []; 
   }
 
+  validarCPF(cpf) {
+    const cpfFormatado = cpf.replace(/[^\d]/g, ''); 
 
-  validarCpf() {
-    const cpf = this.cpf.replace(/[^\d]/g, ''); 
-
-    if (!cpf || cpf.length !== 11 || /^(.)\1{10}$/.test(cpf)) {
+    if (!cpfFormatado || cpfFormatado.length !== 11 || /^(.)\1{10}$/.test(cpfFormatado)) {
       return false;
     }
 
     let soma = 0;
     let peso = 10; 
     for (let i = 0; i < 9; i++) {
-      soma += parseInt(cpf.charAt(i)) * peso--; 
+      soma += parseInt(cpfFormatado.charAt(i)) * peso--; 
     }
 
     let resto = soma % 11;
     let primeiroDigitoVerificador = resto < 2 ? 0 : 11 - resto;
 
-
     soma = 0;
     peso = 11; 
     for (let i = 0; i < 10; i++) {
-      soma += parseInt(cpf.charAt(i)) * peso--; 
+      soma += parseInt(cpfFormatado.charAt(i)) * peso--; 
     }
 
     resto = soma % 11;
     let segundoDigitoVerificador = resto < 2 ? 0 : 11 - resto;
 
-
-    return cpf.charAt(9) == primeiroDigitoVerificador && cpf.charAt(10) == segundoDigitoVerificador;
+    return cpfFormatado.charAt(9) == primeiroDigitoVerificador && cpfFormatado.charAt(10) == segundoDigitoVerificador;
   }
 
-
-  validarNome() {
-    return this.nome.length >= 5;
+  validarNome(nome) {
+    return nome.length >= 5;
   }
 
-
-  validarDataNascimento() {
+  validarDataNascimento(dataNascimento) {
     const regexData = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-    const match = this.dataNascimento.match(regexData);
+    const match = dataNascimento.match(regexData);
 
     if (!match) {
       return false; 
     }
 
     const [dia, mes, ano] = match.slice(1).map(Number);
-    const dataNascimento = new Date(ano, mes - 1, dia);
-    const idade = this.calcularIdade(dataNascimento);
+    const dataNascimentoObj = new Date(ano, mes - 1, dia);
+    const idade = this.calcularIdade(dataNascimentoObj);
 
     return idade >= 13;
   }
-
 
   calcularIdade(dataNascimento) {
     const hoje = new Date();
@@ -71,33 +75,14 @@ class Paciente {
     return idade;
   }
 
-
-  validarDados() {
-    if (!this.validarCPF()) {
-      console.log('CPF inválido.');
-      return false;
-    }
-    if (!this.validarNome()) {
-      console.log('Nome deve ter pelo menos 5 caracteres.');
-      return false;
-    }
-    if (!this.validarDataNascimento()) {
-      console.log('Paciente deve ter pelo menos 13 anos e a data de nascimento deve ser válida.');
-      return false;
-    }
-    return true;
-  }
-
   adicionarConsulta(consulta) {
     this.consultas.push(consulta);
   }
-
 
   temConsultasFuturas() {
     const hoje = new Date();
     return this.consultas.some(consulta => new Date(consulta.data) > hoje);
   }
-
 
   removerConsulta(consulta) {
     const index = this.consultas.indexOf(consulta);
