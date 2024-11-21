@@ -5,44 +5,44 @@ class CadastroDePacientes {
 
   adicionarPaciente(paciente) {
     this.pacientes.push(paciente);
-    console.log(`Paciente ${paciente.nome} adicionado com sucesso.`);
+    return { status: "sucesso", mensagem: `Paciente ${paciente.nome} adicionado com sucesso.` };
   }
 
-  listarPacientes(ordem = 'cpf') {
+  listarPacientes(ordem = "cpf") {
     if (this.pacientes.length === 0) {
-      console.log('Nenhum paciente cadastrado.');
-      return;
+      return { status: "vazio", mensagem: "Nenhum paciente cadastrado." };
     }
 
     const pacientesOrdenados = this.pacientes.sort((a, b) => {
-      if (ordem === 'cpf') {
+      if (ordem === "cpf") {
         return a.cpf.localeCompare(b.cpf);
-      } else if (ordem === 'nome') {
+      } else if (ordem === "nome") {
         return a.nome.localeCompare(b.nome);
       }
       return 0;
     });
 
-    pacientesOrdenados.forEach(paciente => {
-      console.log(`Nome: ${paciente.nome}, CPF: ${paciente.cpf}, Nascimento: ${paciente.dataNascimento}`);
-    });
+    return pacientesOrdenados.map(paciente => ({
+      nome: paciente.nome,
+      cpf: paciente.cpf,
+      dataNascimento: paciente.dataNascimento,
+    }));
   }
 
   excluirPacientePorCPF(cpf) {
     const paciente = this.pacientes.find(p => p.cpf === cpf);
     if (!paciente) {
-      console.log('Paciente não encontrado.');
-      return;
+      return { status: "erro", mensagem: "Paciente não encontrado." };
     }
 
     try {
       const index = this.pacientes.indexOf(paciente);
       if (index > -1) {
         this.pacientes.splice(index, 1);
-        console.log(`Paciente ${paciente.nome} excluído com sucesso.`);
+        return { status: "sucesso", mensagem: `Paciente ${paciente.nome} excluído com sucesso.` };
       }
     } catch (error) {
-      console.log(error.message);
+      return { status: "erro", mensagem: error.message };
     }
   }
 }

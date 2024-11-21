@@ -102,21 +102,58 @@ class Terminal {
     const nome = prompt('Nome: ');
     const dataNascimento = prompt('Data de nascimento (DD/MM/YYYY): ');
 
-    if (this.cadastroDePacientes.pacientes.some(p => p.cpf === cpf)) {
-      console.log('Erro: CPF já cadastrado.');
-    } else {
-      this.cadastroDePacientes.adicionarPaciente({ cpf, nome, dataNascimento });
-    }
+    const resultado = this.cadastroDePacientes.adicionarPaciente({ cpf, nome, dataNascimento });
+    console.log(resultado.mensagem);
   }
 
   excluirPaciente() {
     const cpf = prompt('CPF do paciente a ser excluído: ');
-    this.cadastroDePacientes.excluirPacientePorCPF(cpf);
+    const resultado = this.cadastroDePacientes.excluirPacientePorCPF(cpf);
+    console.log(resultado.mensagem);
   }
 
   listarPacientes(ordem) {
-    this.cadastroDePacientes.listarPacientes(ordem);
+    const resultado = this.cadastroDePacientes.listarPacientes(ordem);
+    
+    if (resultado.status === 'vazio') {
+      console.log(resultado.mensagem);
+    } else {
+      console.log("------------------------------------------------------------");
+      console.log("CPF             Nome                           Dt.Nasc.  Idade");
+      console.log("------------------------------------------------------------");
+  
+      resultado.forEach(paciente => {
+        const idade = this.calcularIdade(paciente.dataNascimento);
+        const nomeFormatado = paciente.nome.padEnd(30, " ");
+        console.log(
+          `${paciente.cpf} ${nomeFormatado} ${paciente.dataNascimento} ${idade.toString().padStart(3, " ")}`
+        );
+  
+        // Exemplo fictício de agendamento; pode ser adaptado ao método correto
+        const agendamento = this.agendamentos.listarAgendamentoPorPaciente(paciente.cpf);
+        if (agendamento) {
+          console.log(`\nAgendado para: ${agendamento.data}`);
+          console.log(`${agendamento.horaInicio} às ${agendamento.horaFim}\n`);
+        }
+      });
+  
+      console.log("------------------------------------------------------------");
+    }
   }
+  
+  calcularIdade(dataNascimento) {
+    const [dia, mes, ano] = dataNascimento.split('/').map(Number);
+    const hoje = new Date();
+    const aniversario = new Date(ano, mes - 1, dia);
+  
+    let idade = hoje.getFullYear() - aniversario.getFullYear();
+    if (hoje < new Date(hoje.getFullYear(), aniversario.getMonth(), aniversario.getDate())) {
+      idade--;
+    }
+    
+    return idade;
+  }
+  
 
   agendarConsulta() {
     const cpfPaciente = prompt('CPF do paciente: ');
@@ -124,45 +161,45 @@ class Terminal {
     const horaInicio = prompt('Hora de início (HH:MM): ');
     const horaFim = prompt('Hora de término (HH:MM): ');
 
-    if (!this.cadastroDePacientes.pacientes.some(p => p.cpf === cpfPaciente)) {
-      console.log('Erro: Paciente não encontrado.');
-    } else {
-      const agendamento = {
-        cpfPaciente,
-        dataConsulta,
-        horaInicio,
-        horaFim
-      };
-
-      this.agendamentos.agendarConsulta(cpfPaciente, dataConsulta, horaInicio, horaFim);  
-      console.log('Consulta agendada com sucesso!');
-    }
+    const resultado = this.agendamentos.agendarConsulta(cpfPaciente, dataConsulta, horaInicio, horaFim);
+    console.log(resultado.mensagem);
   }
 
   cancelarAgendamento() {
     const cpfPaciente = prompt('CPF do paciente: ');
     const dataConsulta = prompt('Data da consulta a ser cancelada (DD/MM/YYYY): ');
 
-    agendamento.excluirAgendamento(cpfPaciente, dataConsulta);
+    const resultado = this.agendamentos.excluirAgendamento(cpfPaciente, dataConsulta);
+    console.log(resultado.mensagem);
   }
 
   listarAgenda() {
     const opcao = prompt('Apresentar agenda T-Toda ou P-Período: ').toUpperCase();
     if (opcao === 'T') {
-      console.log('Agenda completa:');
-      this.agendamentos.listarAgenda();
+      const resultado = this.agendamentos.listarAgenda();
+      if (resultado.status === 'vazio') {
+        console.log(resultado.mensagem);
+      } else {
+        resultado.agendamentos.forEach(consulta => {
+          console.log(
+            `Paciente: ${consulta.paciente}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
+          );
+        });
+      }
     } else if (opcao === 'P') {
       const dataInicio = prompt('Data inicial (DD/MM/YYYY): ');
       const dataFim = prompt('Data final (DD/MM/YYYY): ');
 
-      console.log('Agenda no período:');
-      this.agendamentos.agendamentos
-        .filter(agendamento => agendamento.dataConsulta >= dataInicio && agendamento.dataConsulta <= dataFim)
-        .forEach(agendamento => {
+      const resultado = this.agendamentos.listarAgendaPorPeriodo(dataInicio, dataFim);
+      if (resultado.status === 'vazio') {
+        console.log(resultado.mensagem);
+      } else {
+        resultado.agendamentos.forEach(consulta => {
           console.log(
-            `Data: ${agendamento.dataConsulta}, Horário: ${agendamento.horaInicio} - ${agendamento.horaFim}, CPF: ${agendamento.cpfPaciente}`
+            `Paciente: ${consulta.paciente}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
           );
         });
+      }
     } else {
       console.log('Opção inválida.');
     }
