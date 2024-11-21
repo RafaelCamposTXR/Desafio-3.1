@@ -1,6 +1,7 @@
 import promptSync from 'prompt-sync'; 
 import CadastroDePacientes from './CadastroDePacientes.js';
 import Agendamentos from './agendamento.js';
+import { DateTime } from 'luxon';
 
 const prompt = promptSync();
 
@@ -194,15 +195,37 @@ class Terminal {
       if (resultado.status === 'vazio') {
         console.log(resultado.mensagem);
       } else {
+        console.log("-------------------------------------------------------------");
+        console.log("Data       H.Ini   H.Fim   Tempo  Nome                      Dt.Nasc.");
+        console.log("-------------------------------------------------------------");
+        
         resultado.agendamentos.forEach(consulta => {
+          const { data, horaInicio, horaFim, paciente, nome, dataNascimento } = consulta;
+          const tempoConsulta = this.calcularTempo(horaInicio, horaFim);
+          const nomeFormatado = paciente.padEnd(25, " ");
           console.log(
-            `Paciente: ${consulta.paciente}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
+            `${data} ${horaInicio} ${horaFim} ${tempoConsulta} ${nomeFormatado} ${dataNascimento}`
           );
         });
+
+        console.log("-------------------------------------------------------------");
       }
     } else {
       console.log('Opção inválida.');
     }
+  }
+
+  calcularTempo(horaInicio, horaFim) {
+    const inicio = DateTime.fromISO(horaInicio);  
+    const fim = DateTime.fromISO(horaFim);  
+  
+    const duracao = fim.diff(inicio, 'minutes').minutes;
+  
+    // Converte a duração em horas e minutos
+    const horas = Math.floor(duracao / 60);
+    const minutos = duracao % 60;
+  
+    return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
   }
 }
 
