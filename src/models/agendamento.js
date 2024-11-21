@@ -1,100 +1,85 @@
-import { DateTime } from 'luxon';
+import CadastroDePacientes from './CadastroDePacientes.js'; // Importando a classe CadastroDePacientes
+import Consulta from './Consulta.js';
+
 
 class Agendamento {
-  constructor(cpfPaciente, dataConsulta, horaInicio, horaFim, pacientes, agendamentos) {
-    this.cpfPaciente = cpfPaciente;
-    this.dataConsulta = dataConsulta;
-    this.horaInicio = horaInicio;
-    this.horaFim = horaFim;
-    this.pacientes = pacientes;
-    this.agendamentos = agendamentos;
-  }
-
-  validarAgendamento() {
-    return (
-      this.validarCpf() &&
-      this.validarDataConsulta() &&
-      this.validarHoras() &&
-      this.validarUnicoAgendamento() &&
-      this.validarAgendamentoFuturo() &&
-      this.validarHoraFinalMaiorQueHoraInicio() &&
-      this.validarConsultorioAberto() &&
-      this.validarSobreposicao()
-    );
-  }
-
-  validarCpf() {
-    return this.pacientes.some(paciente => paciente.cpf === this.cpfPaciente);
-  }
-
-  validarDataConsulta() {
-    const dataValida = DateTime.fromFormat(this.dataConsulta, 'dd/MM/yyyy').isValid;
-    return dataValida;
-  }
-
-  validarHoras() {
-    const regexHora = /^(0[8-9]|1[0-9]):(00|15|30|45)$/;
-    const horaInicioValida = regexHora.test(this.horaInicio);
-    const horaFimValida = regexHora.test(this.horaFim);
-
-    const horaInicioValidaIntervalo = DateTime.fromFormat(this.horaInicio, 'HHmm').hour >= 8 && DateTime.fromFormat(this.horaInicio, 'HHmm').hour < 19;
-    const horaFimValidaIntervalo = DateTime.fromFormat(this.horaFim, 'HHmm').hour >= 8 && DateTime.fromFormat(this.horaFim, 'HHmm').hour < 19;
-
-    return horaInicioValida && horaFimValida && horaInicioValidaIntervalo && horaFimValidaIntervalo;
-  }
-
-  validarAgendamentoFuturo() {
-    const dataAtual = DateTime.now();
-    const dataConsultaMoment = DateTime.fromFormat(this.dataConsulta, 'dd/MM/yyyy');
-    const horaInicioMoment = DateTime.fromFormat(this.horaInicio, 'HHmm');
-    const horaAtual = DateTime.now();
-
-    if (dataConsultaMoment > dataAtual) {
-      return true;
-    } else if (dataConsultaMoment.equals(dataAtual) && horaInicioMoment > horaAtual) {
-      return true;
+  constructor(cadastroDePacientes) {
+    if (!(cadastroDePacientes instanceof CadastroDePacientes)) {
+      throw new Error('É necessário passar uma instância de CadastroDePacientes.');
     }
-    return false;
+    this.agendamentos = [];
+    this.cadastroDePacientes = cadastroDePacientes;
   }
 
-  validarHoraFinalMaiorQueHoraInicio() {
-    const horaInicioMoment = DateTime.fromFormat(this.horaInicio, 'HHmm');
-    const horaFimMoment = DateTime.fromFormat(this.horaFim, 'HHmm');
-    return horaFimMoment > horaInicioMoment;
+  // Método para agendar uma nova consulta
+  agendarConsulta(pacienteCpf, data, horaInicio, horaFim) {
+    // Verifica se o paciente está cadastrado
+    const paciente = this.cadastroDePacientes.pacientes.find(p => p.cpf === pacienteCpf);
+    if (!paciente) {
+      throw new Error(`Paciente com CPF ${pacienteCpf} não encontrado.`);
+    }
+
+    // Cria uma nova consulta com os dados do paciente
+    const consulta = new Consulta(paciente.nome, data, horaInicio, horaFim);
+
+    // Valida a consulta antes de agendar
+    consulta.validarHorario();
+    const agora = new Date();
+    console.log(agora);
+    consulta.validarData(agora);
+
+    // Adiciona o agendamento ao array de agendamentos
+    console.log(consulta);
+    this.agendamentos.push(consulta);
+    console.log(`Consulta agendada com sucesso para o paciente ${paciente.nome}!`);
   }
 
-  validarUnicoAgendamento() {
-    return !this.agendamentos.some(agendamento => {
-      return (
-        agendamento.cpfPaciente === this.cpfPaciente &&
-        DateTime.fromFormat(agendamento.dataConsulta, 'dd/MM/yyyy') > DateTime.now()
+  // Método para excluir um agendamento
+  excluirAgendamento(pacienteCpf, data) {
+    const indice = this.agendamentos.findIndex(consulta => consulta.paciente === pacienteCpf && consulta.data === data);
+    
+    if (indice === -1) {
+      throw new Error("Agendamento não encontrado.");
+    }
+
+    this.agendamentos.splice(indice, 1);
+    console.log("Consulta excluída com sucesso!");
+  }
+
+  // Método para listar todos os agendamentos
+  listarAgenda() {
+    if (this.agendamentos.length === 0) {
+      console.log("Não há agendamentos.");
+      return;
+    }
+
+    this.agendamentos.forEach(consulta => {
+      console.log(consulta)
+      console.log(
+        `Paciente: ${consulta.paciente}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
       );
     });
   }
 
-  validarSobreposicao() {
-    return !this.agendamentos.some(agendamento => {
-      const agendamentoInicio = DateTime.fromFormat(`${agendamento.dataConsulta} ${agendamento.horaInicio}`, 'dd/MM/yyyy HHmm');
-      const agendamentoFim = DateTime.fromFormat(`${agendamento.dataConsulta} ${agendamento.horaFim}`, 'dd/MM/yyyy HHmm');
-      const novoInicio = DateTime.fromFormat(`${this.dataConsulta} ${this.horaInicio}`, 'dd/MM/yyyy HHmm');
-      const novoFim = DateTime.fromFormat(`${this.dataConsulta} ${this.horaFim}`, 'dd/MM/yyyy HHmm');
+  // Método para listar agendamentos no período
+  listarAgendaPorPeriodo(dataInicio, dataFim) {
+    const agendamentosNoPeriodo = this.agendamentos.filter(consulta => {
+      const dataConsulta = new Date(consulta.data.split("/").reverse().join("-"));
+      return dataConsulta >= new Date(dataInicio.split("/").reverse().join("-")) && dataConsulta <= new Date(dataFim.split("/").reverse().join("-"));
+    });
 
-      return (
-        (novoInicio >= agendamentoInicio && novoInicio < agendamentoFim) ||
-        (novoFim > agendamentoInicio && novoFim <= agendamentoFim) ||
-        (agendamentoInicio >= novoInicio && agendamentoInicio < novoFim) ||
-        (agendamentoFim > novoInicio && agendamentoFim <= novoFim)
+    if (agendamentosNoPeriodo.length === 0) {
+      console.log("Nenhum agendamento encontrado no período informado.");
+      return;
+    }
+
+    agendamentosNoPeriodo.forEach(consulta => {
+      console.log(
+        `Paciente: ${consulta.paciente}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
       );
     });
-  }
-
-  validarConsultorioAberto() {
-    const horarioInicio = DateTime.fromFormat('0800', 'HHmm');
-    const horarioFim = DateTime.fromFormat('1900', 'HHmm');
-    const horaInicioMoment = DateTime.fromFormat(this.horaInicio, 'HHmm');
-    const horaFimMoment = DateTime.fromFormat(this.horaFim, 'HHmm');
-    return horaInicioMoment >= horarioInicio && horaFimMoment <= horarioFim;
   }
 }
+
 
 export default Agendamento;

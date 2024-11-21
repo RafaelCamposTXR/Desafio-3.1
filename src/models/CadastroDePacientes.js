@@ -1,18 +1,12 @@
 class CadastroDePacientes {
   constructor() {
     this.pacientes = [];
-    this.agendamentos = []; 
   }
 
   adicionarPaciente(paciente) {
     this.pacientes.push(paciente);
     console.log(`Paciente ${paciente.nome} adicionado com sucesso.`);
   }
-
-  adicionarAgendamento(agendamento) {
-    this.agendamentos.push(agendamento);
-  }
-
 
   listarPacientes(ordem = 'cpf') {
     if (this.pacientes.length === 0) {
@@ -31,14 +25,6 @@ class CadastroDePacientes {
 
     pacientesOrdenados.forEach(paciente => {
       console.log(`Nome: ${paciente.nome}, CPF: ${paciente.cpf}, Nascimento: ${paciente.dataNascimento}`);
-
-      const agendamentoFuturo = this.agendamentos.find(agendamento => 
-        agendamento.cpfPaciente === paciente.cpf && DateTime.fromFormat(agendamento.dataConsulta, 'dd/MM/yyyy') > DateTime.now()
-      );
-
-      if (agendamentoFuturo) {
-        console.log(`  Agendamento futuro: ${agendamentoFuturo.dataConsulta} ${agendamentoFuturo.horaInicio} - ${agendamentoFuturo.horaFim}`);
-      }
     });
   }
 
@@ -56,7 +42,9 @@ class CadastroDePacientes {
         console.log(`Paciente ${paciente.nome} excluído com sucesso.`);
       }
     } catch (error) {
-      console.log(error.message); 
+      console.log(error.message);
     }
   }
 }
+
+export default CadastroDePacientes;
