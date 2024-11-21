@@ -131,9 +131,9 @@ class Terminal {
   
         // Exemplo fictício de agendamento; pode ser adaptado ao método correto
         const agendamento = this.agendamentos.listarAgendamentoPorPaciente(paciente.cpf);
-        if (agendamento) {
-          console.log(`\nAgendado para: ${agendamento.data}`);
-          console.log(`${agendamento.horaInicio} às ${agendamento.horaFim}\n`);
+        if (agendamento.sucesso) {
+          console.log(`\nAgendado para: ${agendamento.agendamentos.data}`);
+          console.log(`${agendamento.agendamentos.horaInicio} às ${agendamento.agendamentos.horaFim}\n`);
         }
       });
   
