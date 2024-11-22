@@ -1,5 +1,6 @@
 import CadastroDePacientes from './CadastroDePacientes.js'; // Importando a classe CadastroDePacientes
 import Consulta from './Consulta.js';
+import { DateTime } from "luxon";
 
 class Agendamento {
   constructor(cadastroDePacientes) {
@@ -20,7 +21,7 @@ class Agendamento {
       const consulta = new Consulta(paciente.nome, data, horaInicio, horaFim);
 
       consulta.validarHorario();
-      consulta.validarData(new Date());
+      consulta.validarData(DateTime.local());
 
       this.agendamentos.push(consulta);
       return { sucesso: true, mensagem: `Consulta agendada com sucesso para o paciente ${paciente.nome}.`, consulta };

@@ -3,11 +3,16 @@ import { DateTime } from 'luxon';
 class Consulta {
   constructor(paciente, data, horaInicio, horaFim) {
     this.paciente = paciente;
-    this.data = data;
+
 
     // Usando Luxon para criar os objetos DateTime apenas com horas e minutos
     this.horaInicio = this.criarHora(horaInicio);
     this.horaFim = this.criarHora(horaFim);
+
+    this.data = DateTime.fromFormat(data, "dd/MM/yy");
+    if (!this.data.isValid) {
+      throw new Error("Data inválida. O formato deve ser DD/MM/YY.");
+    }
   }
 
   // Função para criar um objeto DateTime apenas com a hora e minuto
@@ -26,8 +31,8 @@ class Consulta {
     }
 
     // Considerando apenas as horas e minutos, sem o dia
-    const horarioConsultorioInicio = DateTime.fromObject({ hour: 8, minute: 0 }); // 08:00
-    const horarioConsultorioFim = DateTime.fromObject({ hour: 19, minute: 0 }); // 19:00
+    const horarioConsultorioInicio = DateTime.fromObject({ hour: 8, minute: 0 }); 
+    const horarioConsultorioFim = DateTime.fromObject({ hour: 19, minute: 0 }); 
 
     // Verifica se a consulta está dentro do horário de funcionamento
     if (this.horaInicio < horarioConsultorioInicio || this.horaFim > horarioConsultorioFim) {
@@ -41,8 +46,36 @@ class Consulta {
 
   // Verifica se a consulta é para o futuro
   isFuturo(agora) {
-    return this.horaInicio > agora;
-  }
+    console.log(agora);
+    const agoraDateTime = DateTime.fromISO(agora, { setZone: true });
+    console.log(agoraDateTime);
+    console.log(this.data);
+
+
+    // Comparar apenas a data (ignorando a hora)
+    if (this.data > agoraDateTime) {
+        return true;
+    }
+
+    // Se as datas forem iguais, comparar as horas e minutos
+    if (this.data.hasSame(agoraDateTime, "day")) {
+        const horaAtual = agoraDateTime.toObject();
+        const horaInicioConsulta = this.horaInicio.toObject();
+
+        // Comparar hora e minuto
+        if (
+            horaInicioConsulta.hour > horaAtual.hour ||
+            (horaInicioConsulta.hour === horaAtual.hour &&
+                horaInicioConsulta.minute > horaAtual.minute)
+        ) {
+            return true;
+        }
+    }
+
+    // Qualquer outro caso é no passado ou no mesmo instante
+    return false;
+}
+
 
   // Valida se a consulta é para um horário futuro
   validarData(agora) {
