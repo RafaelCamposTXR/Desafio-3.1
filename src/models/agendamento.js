@@ -52,18 +52,24 @@ class Agendamento {
   }
 
   listarAgendaPorPeriodo(dataInicio, dataFim) {
+    // Converte dataInicio e dataFim para DateTime usando Luxon
+    const inicio = DateTime.fromFormat(dataInicio, 'dd/MM/yyyy');
+    const fim = DateTime.fromFormat(dataFim, 'dd/MM/yyyy');
+  
+    // Filtra os agendamentos no período informado
     const agendamentosNoPeriodo = this.agendamentos.filter(consulta => {
-      const dataConsulta = new Date(consulta.data.split('/').reverse().join('-'));
-      return (
-        dataConsulta >= new Date(dataInicio.split('/').reverse().join('-')) &&
-        dataConsulta <= new Date(dataFim.split('/').reverse().join('-'))
-      );
+      // Converte a data da consulta para DateTime
+      const dataConsulta = consulta.data;
+  
+      // Verifica se a data da consulta está dentro do intervalo
+      return dataConsulta >= inicio && dataConsulta <= fim;
     });
-
+  
+    // Retorna o resultado baseado na quantidade de agendamentos encontrados
     if (agendamentosNoPeriodo.length === 0) {
       return { sucesso: false, mensagem: 'Nenhum agendamento encontrado no período informado.', agendamentos: [] };
     }
-
+  
     return { sucesso: true, agendamentos: agendamentosNoPeriodo };
   }
 
