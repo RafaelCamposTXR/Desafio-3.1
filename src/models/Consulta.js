@@ -52,17 +52,14 @@ class Consulta {
     console.log(this.data);
 
 
-    // Comparar apenas a data (ignorando a hora)
     if (this.data > agoraDateTime) {
         return true;
     }
 
-    // Se as datas forem iguais, comparar as horas e minutos
     if (this.data.hasSame(agoraDateTime, "day")) {
         const horaAtual = agoraDateTime.toObject();
         const horaInicioConsulta = this.horaInicio.toObject();
 
-        // Comparar hora e minuto
         if (
             horaInicioConsulta.hour > horaAtual.hour ||
             (horaInicioConsulta.hour === horaAtual.hour &&
@@ -72,12 +69,10 @@ class Consulta {
         }
     }
 
-    // Qualquer outro caso é no passado ou no mesmo instante
     return false;
 }
 
 
-  // Valida se a consulta é para um horário futuro
   validarData(agora) {
     if (!this.isFuturo(agora)) {
       throw new Error("A consulta deve ser agendada para um horário futuro.");

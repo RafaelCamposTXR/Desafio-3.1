@@ -1,6 +1,6 @@
 import promptSync from 'prompt-sync'; 
-import CadastroDePacientes from './CadastroDePacientes.js';
-import Agendamentos from './agendamento.js';
+import CadastroDePacientes from '../services/CadastroDePacientes.js';
+import Agendamentos from '../services/agendamento.js';
 import { DateTime } from 'luxon';
 
 const prompt = promptSync();
