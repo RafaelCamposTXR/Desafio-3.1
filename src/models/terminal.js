@@ -120,7 +120,7 @@ class Terminal {
       console.log(resultado.mensagem);
     } else {
       console.log("------------------------------------------------------------");
-      console.log("CPF             Nome                           Dt.Nasc.  Idade");
+      console.log("CPF             Nome                         Dt.Nasc.  Idade");
       console.log("------------------------------------------------------------");
   
       resultado.forEach(paciente => {
@@ -204,7 +204,7 @@ class Terminal {
           const tempoConsulta = this.calcularTempo(horaInicio, horaFim);
           const nomeFormatado = paciente.padEnd(25, " ");
           console.log(
-            `${data} ${horaInicio} ${horaFim} ${tempoConsulta} ${nomeFormatado} ${dataNascimento}`
+            `${data.toFormat('dd/MM/yy')} ${horaInicio.toFormat('HH:mm')} ${horaFim.toFormat('HH:mm')} ${tempoConsulta} ${nomeFormatado} ${dataNascimento}`
           );
         });
 
