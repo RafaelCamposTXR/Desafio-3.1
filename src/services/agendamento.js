@@ -1,5 +1,5 @@
 import CadastroDePacientes from './CadastroDePacientes.js'; // Importando a classe CadastroDePacientes
-import Consulta from '../models/Consulta.js';
+import Consulta from '../domain/Consulta.js';
 import { DateTime } from "luxon";
 
 class Agendamento {
