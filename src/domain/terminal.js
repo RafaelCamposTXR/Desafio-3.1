@@ -250,19 +250,22 @@ class Terminal {
         message: 'Apresentar agenda T-Toda ou P-Período: ',
       }
     ]);
-
+  
     if (resposta.opcao.toUpperCase() === 'T') {
-      const resultado = this.agendamentos.listarAgenda();
-      if (resultado.status === 'vazio') {
+      // Usando 'await' para garantir que o resultado seja obtido corretamente
+      const resultado = await this.agendamentos.listarAgenda();
+      
+      if (!resultado.sucesso) {
         console.log(resultado.mensagem);
       } else {
         resultado.agendamentos.forEach(consulta => {
           console.log(
-            `Paciente: ${consulta.paciente}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
+            `Paciente: ${consulta.paciente.nome}, Data: ${consulta.data}, Horário: ${consulta.horaInicio} - ${consulta.horaFim}`
           );
         });
       }
     } else if (resposta.opcao.toUpperCase() === 'P') {
+      // Obter as datas de início e fim para o período
       const periodo = await inquirer.prompt([
         {
           type: 'input',
@@ -275,30 +278,33 @@ class Terminal {
           message: 'Data final (DD/MM/YYYY): ',
         }
       ]);
-
-      const resultado = this.agendamentos.listarAgendaPorPeriodo(periodo.dataInicio, periodo.dataFim);
-      if (resultado.status === 'vazio') {
+  
+      // Usando 'await' para garantir que o resultado seja obtido corretamente
+      const resultado = await this.agendamentos.listarAgendaPorPeriodo(periodo.dataInicio, periodo.dataFim);
+      
+      if (!resultado.sucesso) {
         console.log(resultado.mensagem);
       } else {
         console.log("-------------------------------------------------------------");
         console.log("Data       H.Ini   H.Fim   Tempo  Nome                      Dt.Nasc.");
         console.log("-------------------------------------------------------------");
-
+  
         resultado.agendamentos.forEach(consulta => {
           const { data, horaInicio, horaFim, paciente, nome, dataNascimento } = consulta;
           const tempoConsulta = this.calcularTempo(horaInicio, horaFim);
-          const nomeFormatado = paciente.padEnd(25, " ");
+          const nomeFormatado = paciente.nome.padEnd(25, " ");
           console.log(
             `${data.toFormat('dd/MM/yy')} ${horaInicio.toFormat('HH:mm')} ${horaFim.toFormat('HH:mm')} ${tempoConsulta} ${nomeFormatado} ${dataNascimento}`
           );
         });
-
+  
         console.log("-------------------------------------------------------------");
       }
     } else {
       console.log('Opção inválida.');
     }
   }
+  
 
   calcularTempo(horaInicio, horaFim) {
     const inicio = DateTime.fromISO(horaInicio);  
