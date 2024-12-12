@@ -1,48 +1,57 @@
+import { Paciente } from '../database/models'; // Importando o model Paciente do Sequelize
+
 class CadastroDePacientes {
-  constructor() {
-    this.pacientes = [];
-  }
-
-  adicionarPaciente(paciente) {
-    this.pacientes.push(paciente);
-    return { status: "sucesso", mensagem: `Paciente ${paciente.nome} adicionado com sucesso.` };
-  }
-
-  listarPacientes(ordem = "cpf") {
-    if (this.pacientes.length === 0) {
-      return { status: "vazio", mensagem: "Nenhum paciente cadastrado." };
-    }
-
-    const pacientesOrdenados = this.pacientes.sort((a, b) => {
-      if (ordem === "cpf") {
-        return a.cpf.localeCompare(b.cpf);
-      } else if (ordem === "nome") {
-        return a.nome.localeCompare(b.nome);
-      }
-      return 0;
-    });
-
-    return pacientesOrdenados.map(paciente => ({
-      nome: paciente.nome,
-      cpf: paciente.cpf,
-      dataNascimento: paciente.dataNascimento,
-    }));
-  }
-
-  excluirPacientePorCPF(cpf) {
-    const paciente = this.pacientes.find(p => p.cpf === cpf);
-    if (!paciente) {
-      return { status: "erro", mensagem: "Paciente não encontrado." };
-    }
-
+  async adicionarPaciente(paciente) {
     try {
-      const index = this.pacientes.indexOf(paciente);
-      if (index > -1) {
-        this.pacientes.splice(index, 1);
-        return { status: "sucesso", mensagem: `Paciente ${paciente.nome} excluído com sucesso.` };
+      // Cria o paciente no banco de dados
+      const novoPaciente = await Paciente.create({
+        nome: paciente.nome,
+        cpf: paciente.cpf,
+        dataNascimento: paciente.dataNascimento,
+      });
+
+      return { status: "sucesso", mensagem: `Paciente ${novoPaciente.nome} adicionado com sucesso.` };
+    } catch (erro) {
+      return { status: "erro", mensagem: erro.message };
+    }
+  }
+
+  async listarPacientes(ordem = "cpf") {
+    try {
+      // Busca os pacientes no banco de dados, ordenados conforme solicitado
+      const pacientes = await Paciente.findAll({
+        order: [
+          [ordem, 'ASC'] // Ordena por "cpf" ou "nome", dependendo do parâmetro
+        ]
+      });
+
+      if (pacientes.length === 0) {
+        return { status: "vazio", mensagem: "Nenhum paciente cadastrado." };
       }
-    } catch (error) {
-      return { status: "erro", mensagem: error.message };
+
+      return pacientes.map(paciente => ({
+        nome: paciente.nome,
+        cpf: paciente.cpf,
+        dataNascimento: paciente.dataNascimento,
+      }));
+    } catch (erro) {
+      return { status: "erro", mensagem: erro.message };
+    }
+  }
+
+  async excluirPacientePorCPF(cpf) {
+    try {
+      // Busca o paciente no banco de dados pelo CPF
+      const paciente = await Paciente.findOne({ where: { cpf } });
+      if (!paciente) {
+        return { status: "erro", mensagem: "Paciente não encontrado." };
+      }
+
+      // Exclui o paciente do banco de dados
+      await paciente.destroy();
+      return { status: "sucesso", mensagem: `Paciente ${paciente.nome} excluído com sucesso.` };
+    } catch (erro) {
+      return { status: "erro", mensagem: erro.message };
     }
   }
 }

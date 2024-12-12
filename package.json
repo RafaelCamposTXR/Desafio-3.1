@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "desafio1.2": "file:",
+    "dotenv": "^16.4.7",
     "luxon": "^3.5.0",
     "mysql2": "^3.11.5",
     "pg": "^8.13.1",

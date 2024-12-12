@@ -1,88 +1,96 @@
-import CadastroDePacientes from './CadastroDePacientes.js'; // Importando a classe CadastroDePacientes
-import Consulta from '../domain/Consulta.js';
+import { Paciente, Consulta } from '../models'; 
 import { DateTime } from "luxon";
 
 class Agendamento {
-  constructor(cadastroDePacientes) {
-    if (!(cadastroDePacientes instanceof CadastroDePacientes)) {
-      throw new Error('É necessário passar uma instância de CadastroDePacientes.');
-    }
-    this.agendamentos = [];
-    this.cadastroDePacientes = cadastroDePacientes;
-  }
-
-  agendarConsulta(pacienteCpf, data, horaInicio, horaFim) {
-    const paciente = this.cadastroDePacientes.pacientes.find(p => p.cpf === pacienteCpf);
+  async agendarConsulta(pacienteCpf, data, horaInicio, horaFim) {
+    const paciente = await Paciente.findOne({ where: { cpf: pacienteCpf } });
     if (!paciente) {
       return { sucesso: false, mensagem: `Paciente com CPF ${pacienteCpf} não encontrado.` };
     }
 
     try {
-      const consulta = new Consulta(paciente.nome, data, horaInicio, horaFim);
+      const horaInicioObj = DateTime.fromFormat(horaInicio, 'HH:mm');
+      const horaFimObj = DateTime.fromFormat(horaFim, 'HH:mm');
+      const dataObj = DateTime.fromFormat(data, 'dd/MM/yyyy');
 
-      consulta.validarHorario();
-      consulta.validarData(DateTime.local());
+      if (!horaInicioObj.isValid || !horaFimObj.isValid || !dataObj.isValid) {
+        throw new Error('Data ou horário inválido.');
+      }
 
-      this.agendamentos.push(consulta);
+      const consulta = await Consulta.create({
+        pacienteId: paciente.id,
+        data: dataObj.toJSDate(),
+        horaInicio: horaInicioObj.toJSDate(),
+        horaFim: horaFimObj.toJSDate(),
+      });
+
       return { sucesso: true, mensagem: `Consulta agendada com sucesso para o paciente ${paciente.nome}.`, consulta };
     } catch (erro) {
       return { sucesso: false, mensagem: erro.message };
     }
   }
 
-  excluirAgendamento(pacienteCpf, data) {
-    const indice = this.agendamentos.findIndex(
-      consulta => consulta.paciente === pacienteCpf && consulta.data === data
-    );
+  async excluirAgendamento(pacienteCpf, data) {
+    const paciente = await Paciente.findOne({ where: { cpf: pacienteCpf } });
+    if (!paciente) {
+      return { sucesso: false, mensagem: 'Paciente não encontrado.' };
+    }
 
-    if (indice === -1) {
+    const consulta = await Consulta.findOne({
+      where: { pacienteId: paciente.id, data: DateTime.fromFormat(data, 'dd/MM/yyyy').toJSDate() },
+    });
+
+    if (!consulta) {
       return { sucesso: false, mensagem: 'Agendamento não encontrado.' };
     }
 
-    const consultaRemovida = this.agendamentos.splice(indice, 1)[0];
-    return { sucesso: true, mensagem: 'Consulta excluída com sucesso!', consulta: consultaRemovida };
+    await consulta.destroy();
+    return { sucesso: true, mensagem: 'Consulta excluída com sucesso!', consulta };
   }
 
-  listarAgenda() {
-    if (this.agendamentos.length === 0) {
+  async listarAgenda() {
+    const agendamentos = await Consulta.findAll({
+      include: { model: Paciente, attributes: ['nome', 'cpf'] },
+    });
+
+    if (agendamentos.length === 0) {
       return { sucesso: false, mensagem: 'Não há agendamentos.', agendamentos: [] };
     }
 
-    return { sucesso: true, agendamentos: this.agendamentos };
+    return { sucesso: true, agendamentos };
   }
 
-  listarAgendaPorPeriodo(dataInicio, dataFim) {
-    // Converte dataInicio e dataFim para DateTime usando Luxon
-    const inicio = DateTime.fromFormat(dataInicio, 'dd/MM/yyyy');
-    const fim = DateTime.fromFormat(dataFim, 'dd/MM/yyyy');
-  
-    // Filtra os agendamentos no período informado
-    const agendamentosNoPeriodo = this.agendamentos.filter(consulta => {
-      // Converte a data da consulta para DateTime
-      const dataConsulta = consulta.data;
-  
-      // Verifica se a data da consulta está dentro do intervalo
-      return dataConsulta >= inicio && dataConsulta <= fim;
+  async listarAgendaPorPeriodo(dataInicio, dataFim) {
+    const agendamentos = await Consulta.findAll({
+      where: {
+        data: {
+          $gte: DateTime.fromFormat(dataInicio, 'dd/MM/yyyy').toJSDate(),
+          $lte: DateTime.fromFormat(dataFim, 'dd/MM/yyyy').toJSDate(),
+        },
+      },
+      include: { model: Paciente, attributes: ['nome', 'cpf'] },
     });
-  
-    // Retorna o resultado baseado na quantidade de agendamentos encontrados
-    if (agendamentosNoPeriodo.length === 0) {
+
+    if (agendamentos.length === 0) {
       return { sucesso: false, mensagem: 'Nenhum agendamento encontrado no período informado.', agendamentos: [] };
     }
-  
-    return { sucesso: true, agendamentos: agendamentosNoPeriodo };
+
+    return { sucesso: true, agendamentos };
   }
 
-  listarAgendamentoPorPaciente(pacienteCpf) {
-    const agendamentosDoPaciente = this.agendamentos.filter(
-      consulta => consulta.cpfPaciente === pacienteCpf
-    );
+  async listarAgendamentoPorPaciente(pacienteCpf) {
+    const paciente = await Paciente.findOne({ where: { cpf: pacienteCpf } });
+    if (!paciente) {
+      return { sucesso: false, mensagem: 'Paciente não encontrado.' };
+    }
 
-    if (agendamentosDoPaciente.length === 0) {
+    const agendamentos = await Consulta.findAll({ where: { pacienteId: paciente.id } });
+
+    if (agendamentos.length === 0) {
       return { sucesso: false, mensagem: `Nenhum agendamento encontrado para o paciente com CPF ${pacienteCpf}.` };
     }
 
-    return { sucesso: true, agendamentos: agendamentosDoPaciente };
+    return { sucesso: true, agendamentos };
   }
 }
 
