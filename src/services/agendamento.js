@@ -5,42 +5,31 @@ import { DateTime } from "luxon";
 
 class Agendamento {
   async agendarConsulta(pacienteCpf, data, horaInicio, horaFim) {
-    // Buscar paciente pelo CPF
     const paciente = await Paciente.findOne({ where: { cpf: pacienteCpf } });
     if (!paciente) {
       return { sucesso: false, mensagem: `Paciente com CPF ${pacienteCpf} não encontrado.` };
     }
   
     try {
-      // Converter a data e hora usando Luxon
       const horaInicioObj = DateTime.fromFormat(horaInicio, 'HH:mm');
       const horaFimObj = DateTime.fromFormat(horaFim, 'HH:mm');
       const dataObj = DateTime.fromFormat(data, 'dd/MM/yyyy');
   
-      // Verificar se as conversões são válidas
       if (!horaInicioObj.isValid || !horaFimObj.isValid || !dataObj.isValid) {
         throw new Error('Data ou horário inválido.');
       }
   
-      // Criar as instâncias Date do JavaScript a partir dos objetos DateTime do Luxon
-      const horaInicioDate = horaInicioObj.set({ second: 0 }).toJSDate();  // Garantir segundos como 0
-      const horaFimDate = horaFimObj.set({ second: 0 }).toJSDate();  // Garantir segundos como 0
-      const dataDate = dataObj.toJSDate();  // Converte para objeto Date
+      const horaInicioStr = horaInicioObj.toFormat('HH:mm');  
+      const horaFimStr = horaFimObj.toFormat('HH:mm');  
+      const dataDate = dataObj.toJSDate(); 
+
   
-      // Log para inspecionar os valores antes de criar a consulta
-      console.log({
-        pacienteId: paciente.id,
-        data: dataDate,
-        horaInicio: horaInicioDate,
-        horaFim: horaFimDate,
-      });
-  
-      // Criar a consulta
+
       const consulta = await Consulta.create({
         pacienteId: paciente.id,
-        data: dataDate,  // Agora passando o formato Date
-        horaInicio: horaInicioDate,  // Agora passando o formato Date com segundos ajustados
-        horaFim: horaFimDate,  // Agora passando o formato Date com segundos ajustados
+        data: dataDate,  
+        horaInicio: horaInicioStr,  
+        horaFim: horaFimStr,  
       });
   
       return { sucesso: true, mensagem: `Consulta agendada com sucesso para o paciente ${paciente.nome}.`, consulta };
