@@ -1,4 +1,6 @@
-import { Paciente, Consulta } from '../models'; 
+import Paciente from '../models/pacienteModel.js';
+import Consulta from '../models/consultaModel.js';
+
 import { DateTime } from "luxon";
 
 class Agendamento {

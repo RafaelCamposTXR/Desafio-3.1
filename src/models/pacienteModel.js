@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
+import Consulta from '../models/consultaModel.js'; 
 
 const Paciente = sequelize.define('Paciente', {
   id: {
@@ -33,5 +34,7 @@ const Paciente = sequelize.define('Paciente', {
   tableName: 'pacientes',
   timestamps: true, 
 });
+
+Paciente.hasMany(Consulta, { foreignKey: 'pacienteId', as: 'todasConsultas' }); 
 
 export default Paciente;

@@ -91,3 +91,5 @@ class Paciente {
     }
   }
 }
+
+export default Paciente;
